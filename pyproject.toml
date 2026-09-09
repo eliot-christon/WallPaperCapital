@@ -1,29 +1,67 @@
 [project]
 name = "wallpaper-capital"
 version = "1.0.0"
-description = "Télécharge un fond d'écran par capitale depuis Wikimedia Commons."
+description = "Collect one wallpaper per capital city from Wikimedia Commons and use them as a Windows lock screen."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Eliot Christon", email = "eliot.christon@argonandco.com" }]
-keywords = ["wallpaper", "capitals", "wikimedia", "commons", "wikidata"]
+keywords = ["wallpaper", "capitals", "wikimedia", "commons", "wikidata", "lockscreen"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Graphics",
+]
 dependencies = [
     "requests>=2.31.0,<3",
     "Pillow>=10.0.0,<13",
 ]
 
+[project.urls]
+Homepage = "https://github.com/eliot-christon/WallPaperCapital"
+Issues = "https://github.com/eliot-christon/WallPaperCapital/issues"
+
+[project.scripts]
+wpcapital = "wallpaper_capital.cli:main"
+
 [dependency-groups]
-dev = ["ruff>=0.6"]
+dev = [
+    "ruff>=0.6",
+    "pytest>=8.0",
+    "mypy>=1.11",
+    "types-requests>=2.31",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wallpaper_capital"]
 
 [tool.uv]
-# Projet mono-script : rien à construire ni à installer dans le venv.
-package = false
-# Le cache uv et OneDrive ne sont pas sur le même volume, le hardlink échoue.
+# The uv cache and OneDrive live on different volumes, so hardlinking fails.
 link-mode = "copy"
 
 [tool.ruff]
 target-version = "py310"
 line-length = 100
+src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF", "C4", "PTH", "RET", "ARG"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src", "tests"]
+strict = true
+# Pillow ships partial stubs; its dynamic plugin loading defeats strict inference.
+[[tool.mypy.overrides]]
+module = ["PIL.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
