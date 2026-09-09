@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -75,10 +76,10 @@ def spotlight_enabled() -> bool | None:
     None means the question could not be answered: no registry value, or not
     running on Windows at all.
     """
-    try:
-        import winreg
-    except ImportError:  # pragma: no cover - not on Windows
+    if sys.platform != "win32":  # pragma: no cover - not on Windows
         return None
+    import winreg
+
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, SPOTLIGHT_KEY) as key:
             value, _ = winreg.QueryValueEx(key, SPOTLIGHT_VALUE)
@@ -89,10 +90,10 @@ def spotlight_enabled() -> bool | None:
 
 def disable_spotlight() -> bool:
     """Turn Spotlight off for the current user (HKCU, so no elevation needed)."""
-    try:
-        import winreg
-    except ImportError:  # pragma: no cover - not on Windows
+    if sys.platform != "win32":  # pragma: no cover - not on Windows
         return False
+    import winreg
+
     try:
         with winreg.CreateKeyEx(
             winreg.HKEY_CURRENT_USER, SPOTLIGHT_KEY, 0, winreg.KEY_SET_VALUE
