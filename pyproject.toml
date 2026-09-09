@@ -1,0 +1,29 @@
+[project]
+name = "wallpaper-capital"
+version = "1.0.0"
+description = "Télécharge un fond d'écran par capitale depuis Wikimedia Commons."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Eliot Christon", email = "eliot.christon@argonandco.com" }]
+keywords = ["wallpaper", "capitals", "wikimedia", "commons", "wikidata"]
+dependencies = [
+    "requests>=2.31.0,<3",
+    "Pillow>=10.0.0,<13",
+]
+
+[dependency-groups]
+dev = ["ruff>=0.6"]
+
+[tool.uv]
+# Projet mono-script : rien à construire ni à installer dans le venv.
+package = false
+# Le cache uv et OneDrive ne sont pas sur le même volume, le hardlink échoue.
+link-mode = "copy"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]

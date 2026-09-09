@@ -1,0 +1,12 @@
+# Environnement virtuel géré par uv
+.venv/
+
+# Caches
+__pycache__/
+*.py[cod]
+.ruff_cache/
+
+# Données téléchargées : images lourdes et caches d'API
+data/wallpaper/
+data/_wallpaper_precedent/
+data/capitals_wikidata.json
