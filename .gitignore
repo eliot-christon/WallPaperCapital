@@ -1,12 +1,19 @@
-# Environnement virtuel géré par uv
+# Virtual environment managed by uv
 .venv/
 
 # Caches
 __pycache__/
 *.py[cod]
 .ruff_cache/
+.mypy_cache/
+.pytest_cache/
 
-# Données téléchargées : images lourdes et caches d'API
+# Build artefacts
+dist/
+build/
+*.egg-info/
+
+# Downloaded data: heavy images and API caches
 data/wallpaper/
 data/_wallpaper_precedent/
 data/capitals_wikidata.json
