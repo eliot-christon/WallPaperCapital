@@ -1,20 +1,20 @@
 <#
 .SYNOPSIS
-    Applique une image comme ecran de verrouillage Windows, ou interroge l'image courante.
+    Applies an image as the Windows lock screen, or reports the current one.
 
 .DESCRIPTION
-    Pont vers l'API WinRT Windows.System.UserProfile.LockScreen. Agit sur l'utilisateur
-    courant et ne demande aucune elevation.
+    Bridge to the WinRT API Windows.System.UserProfile.LockScreen. It acts on the
+    current user and needs no elevation.
 
-    IMPORTANT : ce script doit tourner sous Windows PowerShell 5.1 (powershell.exe) et non
-    sous PowerShell 7 (pwsh.exe), car la projection WinRT s'appuie sur l'assembly
-    System.Runtime.WindowsRuntime, absente de .NET moderne.
+    IMPORTANT: this script must run under Windows PowerShell 5.1 (powershell.exe) and
+    not under PowerShell 7 (pwsh.exe), because the WinRT projection relies on the
+    System.Runtime.WindowsRuntime assembly, which modern .NET does not ship.
 
 .PARAMETER ImagePath
-    Chemin complet du fichier image a appliquer.
+    Full path of the image file to apply.
 
 .PARAMETER Query
-    Ecrit sur stdout le chemin de l'image d'ecran de verrouillage actuelle, puis sort.
+    Writes the path of the current lock screen image to stdout, then exits.
 
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File Set-LockScreen.ps1 -Query
@@ -35,9 +35,10 @@ $ErrorActionPreference = 'Stop'
 
 function Get-AsTaskMethod {
     <#
-        Recupere par reflexion la bonne surcharge de WindowsRuntimeSystemExtensions::AsTask.
-        Il en existe plusieurs ; on distingue IAsyncOperation<T> (renvoie un resultat) de
-        IAsyncAction (ne renvoie rien) sur le nom du type du parametre unique.
+        Fetches, by reflection, the right overload of
+        WindowsRuntimeSystemExtensions::AsTask. Several exist; IAsyncOperation<T>
+        (returns a result) is told apart from IAsyncAction (returns nothing) by the
+        type name of the single parameter.
     #>
     param([Parameter(Mandatory = $true)][string]$ParameterTypeName)
 
@@ -48,28 +49,28 @@ function Get-AsTaskMethod {
     } | Select-Object -First 1
 
     if ($null -eq $method) {
-        throw "Surcharge AsTask introuvable pour $ParameterTypeName"
+        throw "No AsTask overload found for $ParameterTypeName"
     }
     return $method
 }
 
 try {
-    # Le chargement d'un type WinRT se fait via la syntaxe [Namespace.Type,Assembly,ContentType=WindowsRuntime].
+    # A WinRT type is loaded through the [Namespace.Type,Assembly,ContentType=WindowsRuntime] syntax.
     [Windows.System.UserProfile.LockScreen, Windows.System.UserProfile, ContentType = WindowsRuntime] | Out-Null
 
     if ($Query) {
         $current = [Windows.System.UserProfile.LockScreen]::OriginalImageFile
         if ($null -ne $current) {
-            # OriginalImageFile est un Uri (file:///C:/...) : on rend un chemin exploitable.
+            # OriginalImageFile is a Uri (file:///C:/...); return a usable path.
             Write-Output $current.LocalPath
         }
         exit 0
     }
 
     if (-not (Test-Path -LiteralPath $ImagePath -PathType Leaf)) {
-        throw "Fichier introuvable : $ImagePath"
+        throw "File not found: $ImagePath"
     }
-    # WinRT exige un chemin absolu et normalise.
+    # WinRT requires an absolute, normalised path.
     $fullPath = (Resolve-Path -LiteralPath $ImagePath).ProviderPath
 
     [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime] | Out-Null
@@ -83,8 +84,8 @@ try {
         @([Windows.Storage.StorageFile]::GetFileFromPathAsync($fullPath))
     ).GetAwaiter().GetResult()
 
-    # L'attente est indispensable : sans elle le script se termine avant que Windows
-    # n'ait recopie le fichier dans SystemData, et l'ecran de verrouillage ne change pas.
+    # Waiting is essential: without it the script exits before Windows has copied
+    # the file into SystemData, and the lock screen does not change.
     $asTaskAction = Get-AsTaskMethod -ParameterTypeName 'IAsyncAction'
     $asTaskAction.Invoke(
         $null,
