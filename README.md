@@ -57,7 +57,13 @@ Useful flags:
 uv run wpcapital lockscreen --capital Budapest --dry-run   # preview, changes nothing
 uv run wpcapital lockscreen                                # random draw, applied
 uv run wpcapital lockscreen --restore                      # put the old one back
+uv run wpcapital lockscreen --file data/port_vila_vut.jpg  # apply one exact image now
 ```
+
+`--file` skips the draw entirely and tags whatever image you point it at (any photo, not
+just one already in the library). If its name follows the `capital_iso3.jpg` convention
+and matches a known capital, it gets that capital's label; otherwise the label is
+guessed from the filename.
 
 To run it at every logon:
 
@@ -126,6 +132,16 @@ forces a specific file:
 The key accepts the French name, the English name, or the ISO alpha-3 country code;
 the `File:` prefix is optional. A file that cannot be found is reported and normal
 selection resumes.
+
+### Replacing an image by hand
+
+`data/overrides.json` only steers what `download` fetches from Commons. To use a
+photo of your own instead, drop it in `data/manual/` under the same name as the file
+it should replace in `data/wallpaper/` (e.g. `port_vila_vut.jpg` — `<capital>_<iso3>`,
+accents stripped, see the manifest for the exact stem). At the next `lockscreen` draw
+it wins over the downloaded version with that stem, and it survives `download --force`
+since the two directories are separate. Pass `--manual-dir` to `lockscreen` to use a
+different folder.
 
 ## Files produced
 
