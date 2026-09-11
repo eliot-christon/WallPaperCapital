@@ -25,6 +25,7 @@ from wallpaper_capital.wikidata import load_capitals
 DEFAULT_OUTPUT_DIR = Path("data/wallpaper")
 DEFAULT_CACHE_FILE = Path("data/capitals_wikidata.json")
 DEFAULT_OVERRIDES = Path("data/overrides.json")
+DEFAULT_MANUAL_DIR = Path("data/manual")
 
 MIN_WIDTH = 640
 
@@ -136,6 +137,17 @@ def add_lockscreen_parser(subparsers: SubParsers, common: argparse.ArgumentParse
     parser.add_argument(
         "--output", type=Path, default=state.DEFAULT_OUTPUT, help="Path of the tagged JPEG"
     )
+    parser.add_argument(
+        "--manual-dir",
+        type=Path,
+        default=DEFAULT_MANUAL_DIR,
+        help="Hand-picked images, same naming as --source-dir, override the draw",
+    )
+    parser.add_argument(
+        "--file",
+        type=Path,
+        help="Apply this exact image as the lock screen, skipping the random draw",
+    )
     parser.add_argument("--capital", help="Force a capital, to preview the rendering")
     parser.add_argument("--country-code", help="Force a country by ISO alpha-3 code")
     parser.add_argument(
@@ -202,6 +214,8 @@ def run_lockscreen_command(args: argparse.Namespace) -> int:
             source_dir=args.source_dir,
             cache_file=args.cache_file,
             output=args.output,
+            manual_dir=args.manual_dir,
+            file=args.file,
             capital=args.capital,
             country_code=args.country_code,
             margin_x=args.margin_x,

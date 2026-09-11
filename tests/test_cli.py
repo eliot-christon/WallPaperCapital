@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 import pytest
 
@@ -35,6 +36,12 @@ class TestParser:
         args = parse("lockscreen")
         assert args.command == "lockscreen"
         assert not args.dry_run
+        assert args.manual_dir == Path("data/manual")
+        assert args.file is None
+
+    def test_lockscreen_accepts_an_explicit_file(self) -> None:
+        args = parse("lockscreen", "--file", "data/manual/port_vila_vut.jpg")
+        assert args.file == Path("data/manual/port_vila_vut.jpg")
 
     def test_verbose_is_available_on_both_subcommands(self) -> None:
         assert parse("download", "--verbose").verbose
