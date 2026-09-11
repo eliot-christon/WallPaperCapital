@@ -21,6 +21,8 @@ class LockScreenOptions:
     source_dir: Path
     cache_file: Path
     output: Path
+    manual_dir: Path | None = None
+    file: Path | None = None
     capital: str | None = None
     country_code: str | None = None
     margin_x: float = DEFAULT_MARGIN_X
@@ -47,22 +49,30 @@ def restore(current_state: dict[str, Any]) -> int:
 
 def run(options: LockScreenOptions) -> int:
     """Draw a wallpaper, tag it, and make it the lock screen. Returns an exit code."""
-    if not options.source_dir.is_dir():
-        log.error("Image directory not found: %s", options.source_dir)
-        return 1
-
-    images = gallery.list_images(options.source_dir)
-    if not images:
-        log.error("No image in %s — run `wpcapital download` first", options.source_dir)
-        return 1
-
-    candidates = gallery.filter_images(images, options.capital, options.country_code)
-    if not candidates:
-        log.error("No image matches the requested filters")
-        return 1
-
     current_state = state.load()
-    chosen = gallery.pick(candidates, state.history_of(current_state))
+
+    if options.file is not None:
+        chosen = options.file
+        if not chosen.is_file():
+            log.error("Image not found: %s", chosen)
+            return 1
+    else:
+        if not options.source_dir.is_dir():
+            log.error("Image directory not found: %s", options.source_dir)
+            return 1
+
+        images = gallery.list_images(options.source_dir, options.manual_dir)
+        if not images:
+            log.error("No image in %s — run `wpcapital download` first", options.source_dir)
+            return 1
+
+        candidates = gallery.filter_images(images, options.capital, options.country_code)
+        if not candidates:
+            log.error("No image matches the requested filters")
+            return 1
+
+        chosen = gallery.pick(candidates, state.history_of(current_state))
+
     labels = labels_for(chosen.stem, build_index(options.cache_file))
 
     try:

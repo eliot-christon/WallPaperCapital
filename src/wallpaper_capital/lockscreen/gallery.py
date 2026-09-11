@@ -12,11 +12,22 @@ from wallpaper_capital.text import slugify
 log = logging.getLogger(__name__)
 
 
-def list_images(source_dir: Path) -> list[Path]:
-    """Every wallpaper in the library, in a stable order."""
-    images = sorted(path for path in source_dir.glob("*.jpg") if path.is_file())
-    log.debug("%d image(s) in %s", len(images), source_dir)
-    return images
+def list_images(source_dir: Path, manual_dir: Path | None = None) -> list[Path]:
+    """Every wallpaper in the library, in a stable order.
+
+    A manual pick overrides the downloaded image with the same stem: drop
+    `port_vila_vut.jpg` in `manual_dir` and it replaces the Commons version at the
+    next draw, without `download --force` ever touching or losing it.
+    """
+    images = {path.stem: path for path in source_dir.glob("*.jpg") if path.is_file()}
+    if manual_dir is not None and manual_dir.is_dir():
+        manual = {path.stem: path for path in manual_dir.glob("*.jpg") if path.is_file()}
+        if manual:
+            log.info("%d manual image(s) override the draw", len(manual))
+        images.update(manual)
+    ordered = sorted(images.values())
+    log.debug("%d image(s) in %s", len(ordered), source_dir)
+    return ordered
 
 
 def filter_images(
