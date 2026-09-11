@@ -122,6 +122,38 @@ class TestGallery:
         history = [path.stem for path in library]
         assert gallery.pick(library, history) in library
 
+    def test_a_manual_image_overrides_the_downloaded_one(self, tmp_path: Path) -> None:
+        source_dir, manual_dir = tmp_path / "source", tmp_path / "manual"
+        source_dir.mkdir()
+        manual_dir.mkdir()
+        (source_dir / "port_vila_vut.jpg").write_bytes(b"downloaded")
+        (manual_dir / "port_vila_vut.jpg").write_bytes(b"hand-picked")
+
+        images = gallery.list_images(source_dir, manual_dir)
+
+        assert len(images) == 1
+        assert images[0].read_bytes() == b"hand-picked"
+
+    def test_a_manual_image_with_a_new_stem_is_added(self, tmp_path: Path) -> None:
+        source_dir, manual_dir = tmp_path / "source", tmp_path / "manual"
+        source_dir.mkdir()
+        manual_dir.mkdir()
+        (source_dir / "paris_fra.jpg").write_bytes(b"")
+        (manual_dir / "port_vila_vut.jpg").write_bytes(b"")
+
+        images = gallery.list_images(source_dir, manual_dir)
+
+        assert {path.stem for path in images} == {"paris_fra", "port_vila_vut"}
+
+    def test_a_missing_manual_dir_is_not_fatal(self, tmp_path: Path) -> None:
+        source_dir = tmp_path / "source"
+        source_dir.mkdir()
+        (source_dir / "paris_fra.jpg").write_bytes(b"")
+
+        images = gallery.list_images(source_dir, tmp_path / "absent")
+
+        assert [path.stem for path in images] == ["paris_fra"]
+
 
 class TestState:
     def test_round_trip(self, tmp_path: Path) -> None:

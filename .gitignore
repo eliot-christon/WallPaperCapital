@@ -13,7 +13,8 @@ dist/
 build/
 *.egg-info/
 
-# Downloaded data: heavy images and API caches
+# Downloaded and hand-picked data: heavy images and API caches
 data/wallpaper/
+data/manual/
 data/_wallpaper_precedent/
 data/capitals_wikidata.json
