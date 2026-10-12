@@ -1,13 +1,18 @@
 <#
 .SYNOPSIS
-    Registers (or removes) the scheduled task that changes the lock screen at logon.
+    Registers (or removes) the scheduled task that changes the lock screen at logon
+    and every few hours after that.
 
 .DESCRIPTION
     Creates a task running as the current user, triggered at every logon with a
-    30-second delay. No elevation is required: a standard user may register a task
+    30-second delay, and again every -IntervalHours (12 by default) while the session
+    is open. No elevation is required: a standard user may register a task
     that runs under their own account at RunLevel Limited.
 
     The action uses pythonw.exe from .venv so no console window appears at logon.
+
+.PARAMETER IntervalHours
+    Hours between two changes during a session. 0 keeps the logon trigger only.
 
 .PARAMETER Unregister
     Remove the task instead of creating it.
@@ -19,6 +24,8 @@
     powershell -ExecutionPolicy Bypass -File scripts\Install-StartupTask.ps1 -Unregister
 #>
 param(
+    [ValidateRange(0, 744)]
+    [int]$IntervalHours = 12,
     [switch]$Unregister
 )
 
@@ -55,6 +62,16 @@ $action = New-ScheduledTaskAction `
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $currentUser
 # Let OneDrive and the network settle before touching the lock screen.
 $trigger.Delay = 'PT30S'
+$triggers = @($trigger)
+
+if ($IntervalHours -gt 0) {
+    # No -RepetitionDuration: the repetition then runs indefinitely. The first run is
+    # one interval from now, since logon already covers the start of the session.
+    $triggers += New-ScheduledTaskTrigger `
+        -Once `
+        -At (Get-Date).AddHours($IntervalHours) `
+        -RepetitionInterval (New-TimeSpan -Hours $IntervalHours)
+}
 
 $settings = New-ScheduledTaskSettingsSet `
     -AllowStartIfOnBatteries `
@@ -68,10 +85,13 @@ Register-ScheduledTask `
     -TaskName $TaskName `
     -Description 'Picks a random wallpaper tagged capital/country and applies it as the lock screen.' `
     -Action $action `
-    -Trigger $trigger `
+    -Trigger $triggers `
     -Settings $settings `
     -Principal $principal `
     -Force | Out-Null
 
 Write-Host "Task '$TaskName' registered for $currentUser."
+if ($IntervalHours -gt 0) {
+    Write-Host "It runs at logon and every $IntervalHours h."
+}
 Write-Host "Run it now with: Start-ScheduledTask -TaskName $TaskName"
