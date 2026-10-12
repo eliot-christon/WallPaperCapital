@@ -71,13 +71,14 @@ To run it at every logon:
 powershell -ExecutionPolicy Bypass -File scripts\Install-StartupTask.ps1
 ```
 
-This registers a scheduled task that fires 30 seconds after logon and runs without a
-console. Add `-Unregister` to remove it. No administrator rights are needed: the
+This registers a scheduled task that fires 30 seconds after logon, then every 12 hours
+while the session is open, and runs without a console. `-IntervalHours 6` changes the
+pace, `-IntervalHours 0` keeps the logon trigger only. Add `-Unregister` to remove it. No administrator rights are needed: the
 WinRT API it uses acts on the current user only.
 
 Runtime state lives in `%LOCALAPPDATA%\WallPaperCapital\` — the tagged image, a log,
 and a history of the last 40 draws (the last 20 are excluded from the next draw, so
-the same city does not come back two days running).
+the same city does not come back for days).
 
 Two things worth knowing:
 
